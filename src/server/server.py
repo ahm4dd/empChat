@@ -25,8 +25,8 @@ def handle_client(client_socket: socket) -> None:
         else:
             for client in clients.copy().keys():
                 client.sendall(data.encode('utf-8') + b'\n')
-                print(f"Client {clients[client]} sent:\n-------------\n{data.encode('utf-8')}\n------------\n")
                 time.sleep(1)
+            print(f"Client {clients[client_socket]} sent:\n-------------\n{data.encode('utf-8')}\n------------\n")
 
 
 def server():
