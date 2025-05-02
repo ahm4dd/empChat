@@ -1,16 +1,18 @@
 import socket
 import threading
-
+import time
 HOST = "localhost"
 PORT = 6667
 
-threads = []
+threads = {} # client_socket : thread
+clients = {} # client_socket : addr
 
 def handle_server_commands(command: str, client_socket: socket):
     match command:
         case "/close":
             client_socket.sendall(b"Closed")
             client_socket.close()
+            del clients[client_socket]
 
 def handle_client(client_socket: socket) -> None:
     while True:
@@ -21,32 +23,25 @@ def handle_client(client_socket: socket) -> None:
             handle_server_commands(data, client_socket)
             break
         else:
-            print("cool")
-
-        
+            for client in clients.copy().keys():
+                client.sendall(data.encode('utf-8') + b'\n')
+                print(f"Client {clients[client]} sent:\n-------------\n{data.encode('utf-8')}\n------------\n")
+                time.sleep(1)
 
 
 def server():
-    # soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # soc.bind((HOST, PORT))
-    # soc.close()
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.bind((HOST, PORT))
-        while True:
-            server_socket.listen()
-            (client_socket, addr) = server_socket.accept()
-            handle_client(client_socket)
-            thread = threading.Thread(handle_client, (client_socket,))
-            threads.append(thread)
-            thread.start()
-            # with client_socket:
-            #     print(f"Connected to {addr}")
-            #     while True:
-            #         data = client_socket.recv(1024)
-            #         data = data.decode("utf-8")
-            #         if not data:
-            #             pass
-            #         if data == "close":
-            #             print("Why?")
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+            server_socket.bind((HOST, PORT))
+            while True:
+                server_socket.listen()
+                (client_socket, addr) = server_socket.accept()
+                print(f"Accepted connection: {addr}")
+                clients[client_socket] = addr
+                thread = threading.Thread(target=handle_client, args=(client_socket,))
+                threads[client_socket] = thread
+                thread.start()
+    except Exception as ex:
+        print(f"Error: {ex}")
 
 server()
