@@ -12,6 +12,9 @@ username = ""
 my_socket = None
 stop_event = threading.Event() # An event to indicate that the client has disconnected
 
+
+
+
 def data_read():
     global username
     while not stop_event.is_set():
@@ -29,20 +32,24 @@ def data_read():
 def data_send():
     global username
     while not stop_event.is_set():
-        data_to_send = input(f"{username}:")
-        if data_to_send != f"{username}:":
-            my_socket.sendall(data_to_send.encode("utf-8"))
+        try:
+            data_to_send = input(f"{username}:")
+            if data_to_send != f"{username}:":
+                my_socket.sendall(data_to_send.encode("utf-8"))
+        except KeyboardInterrupt:
+            print("00000000Hey0000000")
+
 
 def main():
     global my_socket
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((HOST, PORT))
-            my_socket = s
-            read_thread = threading.Thread(target=data_read)
-            write_thread = threading.Thread(target=data_send)
-            write_thread.daemon = True
-            stop_event.clear()
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        my_socket = s
+        read_thread = threading.Thread(target=data_read)
+        write_thread = threading.Thread(target=data_send)
+        write_thread.daemon = True
+        stop_event.clear()
+        try:
             read_thread.start()
             write_thread.start()
             while True:
@@ -50,13 +57,11 @@ def main():
                     write_thread.join()
                     my_socket.close()
                     return
-
-    except KeyboardInterrupt:
-        my_socket.sendall(b"/close")
-        stop_event.set()
-        if stop_event.is_set():
-            read_thread.join()
-            write_thread.join()
-            my_socket.close()
+        except KeyboardInterrupt:
+            my_socket.sendall(b"/close")
+            stop_event.set()
+            if stop_event.is_set():
+                write_thread.join()
+                my_socket.close()
 
 main()
