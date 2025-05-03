@@ -37,7 +37,7 @@ def data_send():
             if data_to_send != f"{username}:":
                 my_socket.sendall(data_to_send.encode("utf-8"))
         except KeyboardInterrupt:
-            print("00000000Hey0000000")
+            print("Test")
 
 
 def main():
