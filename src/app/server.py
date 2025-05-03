@@ -37,11 +37,11 @@ def handle_client(client_socket: socket):
 
         if data.startswith("/"):
             result = handle_server_commands(data, client_socket)
-        if result == MESSAGE_CLOSE:
-            del threads[client_socket]
-            break  # Exit the loop BEFORE trying to recv again
-        elif result == "Unknown":
-            pass
+            if result == MESSAGE_CLOSE:
+                del threads[client_socket]
+                break  # Exit the loop BEFORE trying to recv again
+            elif result == "Unknown":
+                pass
         else:
             send_to_users(client_socket, data)
             
@@ -50,7 +50,7 @@ def send_to_users(client_socket, data):
     for client in clients.copy().keys():
         if client == client_socket:
             continue
-        client.sendall(f"-------------\n{clients[client_socket][0]}: {data}-------------".encode("utf-8"))
+        client.sendall(f"-------------\n{clients[client_socket][0]}: {data}\n-------------".encode("utf-8"))
     print(f"Client {clients[client_socket]}:\n-------------\n{data.encode('utf-8')}\n-------------\n")
 
 def server():
@@ -59,21 +59,20 @@ def server():
             server_socket.bind((HOST, PORT))
             while True:
                 server_socket.listen()
-                if len(clients) <= MAX_CLIENTS_SIZE:
-                    (client_socket, addr) = server_socket.accept()
-                    print(f"New connection: {addr}")
-                    client_socket.sendall(b"Server: Enter your username:\n")
-                    username = client_socket.recv(1024).decode("utf-8").strip()
-                    if check_username(client_socket, username) != "exit":
-                        usernames.append(username)
-                        print(f"Accepted connection: {username}:{addr}")
-                        clients[client_socket] = [username, addr]
-                        thread = threading.Thread(target=handle_client, args=(client_socket,))
-                        threads[client_socket] = thread
-                        thread.start()
-                    else:
-                        client_socket.sendall(MESSAGE_CLOSE.encode("utf-8"))
-                        client_socket.close()
+                (client_socket, addr) = server_socket.accept()
+                print(f"New connection: {addr}")
+                client_socket.sendall(b"Server: Enter your username:\n")
+                username = client_socket.recv(1024).decode("utf-8").strip()
+                if check_username(client_socket, username) != "exit":
+                    usernames.append(username)
+                    print(f"Accepted connection: {username}:{addr}")
+                    clients[client_socket] = [username, addr]
+                    thread = threading.Thread(target=handle_client, args=(client_socket,))
+                    threads[client_socket] = thread
+                    thread.start()
+                else:
+                    client_socket.sendall(MESSAGE_CLOSE.encode("utf-8"))
+                    client_socket.close()
 
     except Exception as ex:
         print(f"Error: {ex}")

@@ -14,7 +14,7 @@ stop_event = threading.Event() # An event to indicate that the client has discon
 
 def data_read():
     global username
-    while True and not stop_event.is_set():
+    while not stop_event.is_set():
         data = my_socket.recv(1024)
         data = data.decode("utf-8")
         if data == "":
@@ -28,7 +28,7 @@ def data_read():
         
 def data_send():
     global username
-    while True and not stop_event.is_set():
+    while not stop_event.is_set():
         data_to_send = input(f"{username}:")
         if data_to_send != f"{username}:":
             my_socket.sendall(data_to_send.encode("utf-8"))
