@@ -12,7 +12,7 @@ usernames = []
 
 def check_username(client_socket, username):
     while username in usernames and username != "exit":
-        client_socket.sendall(b"Server: Username Exists!\nEnter a new username or 'exit' to exit the program:\n")
+        client_socket.sendall(b"-------------\nServer: Username Exists!\n-------------\n-------------\nEnter a new username or 'exit' to exit the program:\n-------------")
         username = client_socket.recv(1024).decode("utf-8").strip()
     if username != "exit":
         client_socket.sendall(b"Server: Welcome "+ username.encode("utf-8"))
@@ -51,7 +51,7 @@ def send_to_users(client_socket, data):
         if client == client_socket:
             continue
         client.sendall(f"-------------\n{clients[client_socket][0]}: {data}\n-------------".encode("utf-8"))
-    print(f"Client {clients[client_socket]}:\n-------------\n{data.encode('utf-8')}\n-------------\n")
+    print(f"Client {clients[client_socket]}:\n-------------\n{data.encode('utf-8')}\n-------------")
 
 def server():
     try:
@@ -69,6 +69,7 @@ def server():
                     clients[client_socket] = [username, addr]
                     thread = threading.Thread(target=handle_client, args=(client_socket,))
                     threads[client_socket] = thread
+                    send_to_users(client_socket, "Joined the server")
                     thread.start()
                 else:
                     client_socket.sendall(MESSAGE_CLOSE.encode("utf-8"))
