@@ -14,9 +14,15 @@ def check_username(client_socket, username):
     while username in usernames and username != "exit":
         client_socket.sendall(b"-------------\nServer: Username Exists!\n-------------\n-------------\nEnter a new username or 'exit' to exit the program:\n-------------")
         username = client_socket.recv(1024).decode("utf-8").strip()
-    if username != "exit":
+    if username != "exit" and username != "/close":
         client_socket.sendall(b"Server: Welcome "+ username.encode("utf-8"))
-    return username
+        return username
+    else:
+        print(f"Client {client_socket}:\n-------------\n{"Left the server".encode('utf-8')}\n-------------")
+        client_socket.sendall(MESSAGE_CLOSE.encode("utf-8"))
+        client_socket.close()
+        return "invalid"
+
 
 def handle_server_commands(command: str, client_socket: socket):
     match command:
@@ -63,7 +69,7 @@ def server():
                 print(f"New connection: {addr}")
                 client_socket.sendall(b"Server: Enter your username:\n")
                 username = client_socket.recv(1024).decode("utf-8").strip()
-                if check_username(client_socket, username) != "exit":
+                if check_username(client_socket, username) != "invalid":
                     usernames.append(username)
                     print(f"Accepted connection: {username}:{addr}")
                     clients[client_socket] = [username, addr]
@@ -71,9 +77,6 @@ def server():
                     threads[client_socket] = thread
                     send_to_users(client_socket, "Joined the server")
                     thread.start()
-                else:
-                    client_socket.sendall(MESSAGE_CLOSE.encode("utf-8"))
-                    client_socket.close()
 
     except Exception as ex:
         print(f"Error: {ex}")

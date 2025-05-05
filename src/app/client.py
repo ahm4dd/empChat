@@ -7,7 +7,7 @@ from constants import *
 HOST = "localhost"
 PORT = 6667
 
-username = ""
+username = None
 
 my_socket = None
 stop_event = threading.Event() # An event to indicate that the client has disconnected
@@ -22,8 +22,9 @@ def data_read():
         data = data.decode("utf-8")
         if data == "":
             continue
-        if username == "" and len(re.findall("^Server: Welcome (.*?)$", data)) == 2:
-            username = re.findall("^(Server: Welcome )(.*?)$", data)[1]
+        if username == None and len(re.findall("^(Server: Welcome) (.*?)$", data)) == 1:
+            print("Hello")
+            username = re.findall("^(Server: Welcome) (.*?)$", data)[0][1]
         print(f"\n{data}\n")
         if (data == MESSAGE_CLOSE):
             stop_event.set()
