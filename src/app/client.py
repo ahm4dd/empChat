@@ -2,7 +2,10 @@ import socket
 import threading
 import time
 import re
+import rich
 from constants import *
+from rich import print
+from rich.prompt import Prompt
 
 HOST = "localhost"
 PORT = 6667
@@ -23,9 +26,11 @@ def data_read():
         if data == "":
             continue
         if username == None and len(re.findall("^(Server: Welcome) (.*?)$", data)) == 1:
-            print("Hello")
             username = re.findall("^(Server: Welcome) (.*?)$", data)[0][1]
-        print(f"\n{data}\n")
+        if len(re.findall("^(Server:) (.*)$", data)) == 1:
+            rich.print(f"\n[bold red]{re.findall("^(Server:) (.*)$", data)[0][0]}[/bold red]: [blue]{re.findall("^(Server:) (.*)$", data)[0][1]}[/blue]\n")
+        else:
+            rich.print(f"\n-------------\n[bold yellow]{re.findall("^(.*?): (.*)$", data)[0][0]}[/bold yellow]: [orange4]{re.findall("^(.*?): (.*)$", data)[0][1]}[/orange4]\n-------------\n")
         if (data == MESSAGE_CLOSE):
             stop_event.set()
             return
@@ -34,8 +39,11 @@ def data_send():
     global username
     while not stop_event.is_set():
         try:
-            data_to_send = input(f"{username}:")
-            if data_to_send != f"{username}:":
+            if username == None:
+                data_to_send = input()
+            else:
+                data_to_send = Prompt.ask(f"[bold magenta]{username}[/bold magenta]")
+            if data_to_send != f"{username}:" and data_to_send != "":
                 my_socket.sendall(data_to_send.encode("utf-8"))
         except KeyboardInterrupt:
             print("Test")
