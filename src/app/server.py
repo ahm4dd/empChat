@@ -13,9 +13,9 @@ usernames = ["Server"]
 
 def check_username(client_socket, username):
     while username in usernames and username != "exit":
-        client_socket.sendall(b"Server: Username Exists!\n-------------\n-------------\nEnter a new username or 'exit' to exit the program:")
+        client_socket.sendall(b"Server: [red]"+ username.encode("utf-8") + b"[/red] already exists.")
         username = client_socket.recv(1024).decode("utf-8").strip()
-    if username != "exit" and username != "/close":
+    if username != "exit" and username != "/close" and username not in usernames:
         client_socket.sendall(b"Server: Welcome "+ username.encode("utf-8"))
         return username
     else:
@@ -71,7 +71,7 @@ def server():
                 server_socket.listen()
                 (client_socket, addr) = server_socket.accept()
                 print(f"New connection: {addr}")
-                client_socket.sendall(b"Server: Enter your username:\n")
+                client_socket.sendall(b"Server: Enter your username:")
                 username = client_socket.recv(1024).decode("utf-8").strip()
                 if check_username(client_socket, username) != "invalid":
                     usernames.append(username)

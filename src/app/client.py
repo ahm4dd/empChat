@@ -16,8 +16,6 @@ my_socket = None
 stop_event = threading.Event() # An event to indicate that the client has disconnected
 
 
-
-
 def data_read():
     global username
     while not stop_event.is_set():
@@ -27,10 +25,13 @@ def data_read():
             continue
         if username == None and len(re.findall("^(Server: Welcome) (.*?)$", data)) == 1:
             username = re.findall("^(Server: Welcome) (.*?)$", data)[0][1]
-        if len(re.findall("^(Server:) (.*)$", data)) == 1:
-            rich.print(f"\n[bold red]{re.findall("^(Server:) (.*)$", data)[0][0]}[/bold red]: [blue]{re.findall("^(Server:) (.*)$", data)[0][1]}[/blue]\n")
-        else:
+        
+        if len(re.findall("^(Server): (.*)$", data)) == 1:
+            rich.print(f"\n[bold red]{re.findall("^(Server): (.*)$", data)[0][0]}[/bold red]: [blue]{re.findall("^(Server): (.*)$", data)[0][1]}[/blue]\n")
+        elif len(re.findall("^(.*?): (.*)$", data)) == 1:
             rich.print(f"\n-------------\n[bold yellow]{re.findall("^(.*?): (.*)$", data)[0][0]}[/bold yellow]: [orange4]{re.findall("^(.*?): (.*)$", data)[0][1]}[/orange4]\n-------------\n")
+        else:
+            rich.print(f"\n-------------\n[bold blue]{data}[/bold blue]\n-------------\n")
         if (data == MESSAGE_CLOSE):
             stop_event.set()
             return
