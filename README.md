@@ -64,7 +64,7 @@ Open more client terminals to simulate multiple users.
 
 - Private messaging
 
--Channel/room support
+- Channel/room support
 
 📜 License
 > MIT License. Feel free to use, modify, and share.
