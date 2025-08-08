@@ -172,7 +172,7 @@ class ChatClient(App):
             t.append(line)
             t.append("\n")
         self.chat_display.update(t)
-        self.chat_display.scroll_end(animate=False)
+        self.call_later(self.chat_display.scroll_end, animate=False)
         # users
         self.users_display.update(Text("\n".join(self.users), style="bold magenta"))
 
