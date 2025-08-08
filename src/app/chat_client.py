@@ -1,7 +1,7 @@
 import socket, threading, re
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Header, Footer, Input, Log
+from textual.widgets import Header, Footer, Input, Log, Static
 from textual.reactive import reactive
 from rich.text import Text
 
@@ -46,11 +46,11 @@ class ChatClient(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        self.channel_display = Log(id="channel_display")
+        self.channel_display = Static(id="channel_display")
         yield self.channel_display
         with Horizontal():
             self.chat_display = Log(id="chat_display")
-            self.users_display = Log(id="users_display")
+            self.users_display = Static(id="users_display")
             yield self.chat_display
             yield self.users_display
         self.input_box = Input(placeholder=f"Cmds: /help", id="input_widget")
@@ -162,10 +162,9 @@ class ChatClient(App):
 
     def update_displays(self):
         # channel
-        self.channel_display.write(Text(self.channel, justify="center", style="bold yellow"))
+        self.channel_display.update(Text(self.channel, justify="center", style="bold yellow"))
         # users
-        self.users_display.clear()
-        self.users_display.write(Text("\n".join(self.users), style="bold magenta"))
+        self.users_display.update(Text("\n".join(self.users), style="bold magenta"))
 
     def on_unmount(self):
         self.stop_event.set()
