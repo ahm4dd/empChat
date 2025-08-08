@@ -6,7 +6,7 @@ from constants import *
 HOST = "localhost"
 PORT = 6667
 
-lock = threading.Lock()
+lock = threading.RLock()
 threads = {}  # client_socket -> thread
 clients = {}  # client_socket -> [username, addr, channel]
 usernames = ["Server"]
