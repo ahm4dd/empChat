@@ -33,6 +33,7 @@ class ChatClient(App):
     }
     """
 
+    chat_log: reactive[list[Text]] = reactive([])
     users: reactive[list[str]] = reactive([])
     username: str | None = None
     channel: reactive[str] = reactive("Connecting...")
@@ -49,7 +50,7 @@ class ChatClient(App):
         self.channel_display = Static(id="channel_display")
         yield self.channel_display
         with Horizontal():
-            self.chat_display = Log(id="chat_display")
+            self.chat_display = Static(id="chat_display")
             self.users_display = Static(id="users_display")
             yield self.chat_display
             yield self.users_display
@@ -58,7 +59,7 @@ class ChatClient(App):
         yield Footer()
 
     def on_mount(self):
-        self.chat_display.write(Text("Connecting to server…", style="bold green"))
+        self.chat_log.append(Text("Connecting to server…", style="bold green"))
         self.update_displays()
         threading.Thread(target=self._connect, daemon=True).start()
 
@@ -68,7 +69,7 @@ class ChatClient(App):
             self.sock.connect((HOST, PORT))
             threading.Thread(target=self._recv_loop, daemon=True).start()
         except Exception as e:
-            self.chat_display.write(Text(f"Connect error: {e}", style="bold red"))
+            self.chat_log.append(Text(f"Connect error: {e}", style="bold red"))
             self.update_displays()
 
     def _recv_loop(self):
@@ -88,7 +89,7 @@ class ChatClient(App):
                     msg = Text.from_markup(text.replace("Server:", "[bold white]Server:[/bold white] "))
                 except:
                     msg = Text(text)
-                self.chat_display.write(msg)
+                self.chat_log.append(msg)
                 # User list update
                 match = re.search(r"Users: \[(.*?)\]", text)
                 if match:
@@ -124,11 +125,11 @@ class ChatClient(App):
                 if m:
                     sender, body = m.groups()
                     color = self._color_for(sender)
-                    self.chat_display.write(
+                    self.chat_log.append(
                         Text.assemble((f"{sender}: ", f"bold {color}"), (body, "white"))
                     )
                 else:
-                    self.chat_display.write(Text(text, style="white"))
+                    self.chat_log.append(Text(text, style="white"))
 
             self.update_displays()
 
@@ -149,13 +150,15 @@ class ChatClient(App):
         # locally echo your own message
         if self.username and not text.startswith("/"):
             col = self._color_for(self.username)
-            self.chat_display.write(
+            self.chat_log.append(
                 Text.assemble((f"{self.username}: ", f"bold {col}"), (text, "white"))
             )
+            self.update_displays()
         try:
             self.sock.sendall(text.encode("utf-8"))
         except:
-            self.chat_display.write(Text("Send failed.", style="bold red"))
+            self.chat_log.append(Text("Send failed.", style="bold red"))
+            self.update_displays()
         if text == MESSAGE_CLOSE:
             self.stop_event.set()
             self.exit()
@@ -163,6 +166,13 @@ class ChatClient(App):
     def update_displays(self):
         # channel
         self.channel_display.update(Text(self.channel, justify="center", style="bold yellow"))
+        # chat
+        t = Text()
+        for line in self.chat_log[-200:]:
+            t.append(line)
+            t.append("\n")
+        self.chat_display.update(t)
+        self.chat_display.scroll_end(animate=False)
         # users
         self.users_display.update(Text("\n".join(self.users), style="bold magenta"))
 
