@@ -13,7 +13,7 @@ https://github.com/user-attachments/assets/48d22a11-26b6-467c-8e0f-cb5bd8e50859
 
 ---
 
-## ✅ Features
+## Features
 
 - Live chat between multiple clients
 - User-specific color-coded messages
@@ -23,7 +23,7 @@ https://github.com/user-attachments/assets/48d22a11-26b6-467c-8e0f-cb5bd8e50859
 
 ---
 
-## 🐍 Requirements
+## Requirements
 
 ### Python version:
 
@@ -37,7 +37,7 @@ Python 3.10 or higher
 pip install textual rich
 ```
 
-## 🚀 Running the App
+## Running the App
 1. Start the server:
 ```bash
 python server.py
@@ -49,7 +49,7 @@ python client.py
 ```
 Open more client terminals to simulate multiple users.
 
-## 💬 Commands
+## Commands
 
 | Command            | Description                          | Example                |
 |--------------------|--------------------------------------|------------------------|
@@ -59,13 +59,13 @@ Open more client terminals to simulate multiple users.
 | `/close`           | Disconnect from the server gracefully| `/close`               |
 
 
-## 📦 Future Plans
+## Future Plans
 - Persistent chat history
 
 - Private messaging
 
 - Channel/room support
 
-📜 License
+License
 > MIT License. Feel free to use, modify, and share.
 
