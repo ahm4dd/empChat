@@ -1,7 +1,7 @@
 import socket, threading, re
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Header, Footer, Input, Static
+from textual.widgets import Header, Footer, Input, Log, Static
 from textual.reactive import reactive
 from rich.text import Text
 
@@ -25,27 +25,36 @@ class ChatClient(App):
         width: 24; height: 1fr; overflow: auto;
     }
     #input_widget { border: round blue; height: 3; }
+    #channel_display {
+        border: round yellow;
+        height: 3;
+        text-align: center;
+        padding-top: 1;
+    }
     """
 
     chat_log: reactive[list[Text]] = reactive([])
-    users: reactive[list[str]]    = reactive([])
-    username: str | None          = None
+    users: reactive[list[str]] = reactive([])
+    username: str | None = None
+    channel: reactive[str] = reactive("Connecting...")
 
     def __init__(self):
         super().__init__()
         self.stop_event = threading.Event()
         self.sock: socket.socket | None = None
-        self.user_colors: dict[str,str] = {}
-        self.palette = ["cyan","green","yellow","blue","magenta","red","white"]
+        self.user_colors: dict[str, str] = {}
+        self.palette = ["cyan", "green", "yellow", "blue", "magenta", "red", "white"]
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
+        self.channel_display = Static(id="channel_display")
+        yield self.channel_display
         with Horizontal():
             self.chat_display = Static(id="chat_display")
             self.users_display = Static(id="users_display")
             yield self.chat_display
             yield self.users_display
-        self.input_box = Input(placeholder="Type /help for commands", id="input_widget")
+        self.input_box = Input(placeholder=f"Cmds: /help", id="input_widget")
         yield self.input_box
         yield Footer()
 
@@ -81,18 +90,34 @@ class ChatClient(App):
                 except:
                     msg = Text(text)
                 self.chat_log.append(msg)
+                # User list update
+                match = re.search(r"Users: \[(.*?)\]", text)
+                if match:
+                    user_list_str = match.group(1)
+                    # The user list can be tricky to parse because of the quotes.
+                    # Let's use a more robust way to parse it.
+                    self.users = [u.strip().strip("'") for u in user_list_str.split(",")]
+
+
                 # update users list on join/leave
-                if "Joined the server" in text or "Left the server" in text:
+                if "Joined the channel" in text or "Left the channel" in text:
                     names = re.findall(r"\[magenta\](.*?)\[/magenta\]", text)
                     for n in names:
                         if "Joined" in text and n not in self.users:
                             self.users.append(n)
-                        if "Left"   in text and n in self.users:
+                        if "Left" in text and n in self.users:
                             self.users.remove(n)
+
+                # channel join/leave status
+                match = re.search(r"You joined (.*?)\. Users:", text)
+                if match:
+                    self.channel = match.group(1)
+
+
                 # Welcome
-                m = re.match(r"Server: Welcome (.+)", text)
+                m = re.match(r"Server: Welcome (.*?), you have joined (#\w+)", text)
                 if m and not self.username:
-                    self.username = m.group(1)
+                    self.username, self.channel = m.groups()
                     self.users.append(self.username)
             else:
                 # normal user message
@@ -139,12 +164,15 @@ class ChatClient(App):
             self.exit()
 
     def update_displays(self):
+        # channel
+        self.channel_display.update(Text(self.channel, justify="center", style="bold yellow"))
         # chat
         t = Text()
         for line in self.chat_log[-200:]:
             t.append(line)
             t.append("\n")
         self.chat_display.update(t)
+        self.call_later(self.chat_display.scroll_end, animate=False)
         # users
         self.users_display.update(Text("\n".join(self.users), style="bold magenta"))
 
